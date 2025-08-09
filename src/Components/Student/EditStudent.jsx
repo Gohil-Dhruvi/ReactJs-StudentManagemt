@@ -1,251 +1,302 @@
-// import React, { useEffect, useState } from "react";
-// import { useNavigate, useParams } from "react-router-dom";
-// import StudentForm from "./StudentForm";
-// import { getStudentById, updateStudent } from "../../Services/studentService";
-// import { toast } from "react-toastify";
-
-// const EditStudent = () => {
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   const [initialData, setInitialData] = useState(null);
-
-//   useEffect(() => {
-//     getStudentById(id)
-//       .then((data) => setInitialData(data))
-//       .catch(() => toast.error("Failed to load student data."));
-//   }, [id]);
-
-//   const handleUpdateStudent = async (updatedData) => {
-//     try {
-//       await updateStudent(id, updatedData);
-//       toast.success("Student updated successfully!");
-//       navigate("/students");
-//     } catch (error) {
-//       toast.error("Failed to update student: " + error.message);
-//     }
-//   };
-
-//   if (!initialData) return <div>Loading...</div>;
-
-//   return (
-//     <div className="container mt-4">
-//       <h2>Edit Student</h2>
-//       <StudentForm initialData={initialData} onSubmit={handleUpdateStudent} />
-//     </div>
-//   );
-// };
-
-// export default EditStudent;
-
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { Form, Button, Card, Alert, Spinner } from "react-bootstrap";
-import { updateStudent, fetchStudentById } from "../../Redux/Students/actions";
+import {
+  Container,
+  Card,
+  Form,
+  Button,
+  Spinner,
+  Row,
+  Col,
+} from "react-bootstrap";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStudentById, updateStudent } from "../../Redux/Students/actions";
+
+import { FaEdit, FaArrowLeft } from "react-icons/fa";
 
 const EditStudent = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { selectedStudent, loading: studentLoading } = useSelector((state) => state.students);
-  
-  const [formData, setFormData] = useState({
+
+  const { selectedStudent, loading: studentLoading } = useSelector(
+    (state) => state.students
+  );
+
+  const [form, setForm] = useState({
     name: "",
-    email: "",
     age: "",
     course: "",
-    imageUrl: ""
+    email: "",
+    phone: "",
+    gender: "",
+    enrollmentDate: "",
+    address: "",
   });
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchStudentById(id));
+    if (id) {
+      dispatch(fetchStudentById(id));
+    }
   }, [dispatch, id]);
 
   useEffect(() => {
     if (selectedStudent) {
-      setFormData({
+      setForm({
         name: selectedStudent.name || "",
-        email: selectedStudent.email || "",
-        age: selectedStudent.age?.toString() || "",
+        age: selectedStudent.age || "",
         course: selectedStudent.course || "",
-        imageUrl: selectedStudent.imageUrl || ""
+        email: selectedStudent.email || "",
+        phone: selectedStudent.phone || "",
+        gender: selectedStudent.gender || "",
+        enrollmentDate: selectedStudent.enrollmentDate || "",
+        address: selectedStudent.address || "",
       });
     }
   }, [selectedStudent]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-    if (!formData.age) newErrors.age = "Age is required";
-    else if (isNaN(formData.age) || formData.age < 1 || formData.age > 120) {
-      newErrors.age = "Age must be between 1 and 120";
-    }
-    if (!formData.course.trim()) newErrors.course = "Course is required";
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setSubmitting(true);
+
+    if (!form.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    setLoading(true);
     try {
-      await dispatch(updateStudent(id, {
-        ...formData,
-        age: Number(formData.age)
-      }));
-      
-      toast.success("Student updated successfully!");
+      await dispatch(updateStudent(id, { ...form, name: form.name.trim() }));
+      toast.success("Student updated successfully");
       navigate("/students");
     } catch (error) {
       toast.error(error.message || "Failed to update student");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   if (studentLoading) {
     return (
       <div className="text-center mt-5">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <Spinner animation="border" />
       </div>
     );
   }
 
   return (
-    <div className="container mt-4">
-      <Card className="shadow">
-        <Card.Body>
-          <h2 className="text-center mb-4">Edit Student</h2>
-          
-          {Object.keys(errors).length > 0 && (
-            <Alert variant="danger">
-              Please fix the errors below
-            </Alert>
-          )}
+    <Container className="mt-5" style={{ maxWidth: 800 }}>
+      <Card className="p-4 shadow-lg border-0 rounded-4 stylish-card m-5">
+        <Row className="align-items-center mb-4">
+          <Col>
+            <h3 className="fw-bold text-gradient mb-0">
+              <FaEdit className="me-2" />
+              Edit Student
+            </h3>
+          </Col>
+          <Col className="text-end">
+            <Button
+              as={Link}
+              to="/students"
+              variant="outline-primary"
+              size="sm"
+              className="student-list-btn"
+            >
+              <FaArrowLeft className="me-2" />
+              Student List
+            </Button>
+          </Col>
+        </Row>
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Full Name *</Form.Label>
-              <Form.Control
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                isInvalid={!!errors.name}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.name}
-              </Form.Control.Feedback>
-            </Form.Group>
+        <Form onSubmit={handleSubmit}>
+          {/* Personal Information */}
+          <h5 className="mb-3 section-title">Personal Information</h5>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Name *</Form.Label>
+                <Form.Control
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Enter student name"
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Age</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="age"
+                  value={form.age}
+                  onChange={handleChange}
+                  placeholder="Age"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Gender</Form.Label>
+                <Form.Select
+                  name="gender"
+                  value={form.gender}
+                  onChange={handleChange}
+                >
+                  <option value="">Select...</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Email *</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                isInvalid={!!errors.email}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.email}
-              </Form.Control.Feedback>
-            </Form.Group>
+          {/* Contact Information */}
+          <h5 className="mb-3 section-title">Contact Information</h5>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Enter email"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Phone</Form.Label>
+                <Form.Control
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone number"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Age *</Form.Label>
-              <Form.Control
-                type="number"
-                name="age"
-                min="1"
-                max="120"
-                value={formData.age}
-                onChange={handleChange}
-                isInvalid={!!errors.age}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.age}
-              </Form.Control.Feedback>
-            </Form.Group>
+          {/* Academic Information */}
+          <h5 className="mb-3 section-title">Academic Information</h5>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Course</Form.Label>
+                <Form.Control
+                  name="course"
+                  value={form.course}
+                  onChange={handleChange}
+                  placeholder="Enter course name"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Enrollment Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="enrollmentDate"
+                  value={form.enrollmentDate}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Course *</Form.Label>
-              <Form.Control
-                type="text"
-                name="course"
-                value={formData.course}
-                onChange={handleChange}
-                isInvalid={!!errors.course}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.course}
-              </Form.Control.Feedback>
-            </Form.Group>
+          {/* Address */}
+          <h5 className="mb-3 section-title">Address</h5>
+          <Form.Group className="mb-4">
+            <Form.Control
+              as="textarea"
+              name="address"
+              rows={2}
+              value={form.address}
+              onChange={handleChange}
+              placeholder="Enter full address"
+            />
+          </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Image URL</Form.Label>
-              <Form.Control
-                type="url"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/student.jpg"
-              />
-            </Form.Group>
-
-            <div className="d-grid gap-2">
-              <Button 
-                variant="primary" 
-                type="submit" 
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
-                    Updating...
-                  </>
-                ) : "Update Student"}
-              </Button>
-              <Button 
-                variant="secondary" 
-                onClick={() => navigate("/students")}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Form>
-        </Card.Body>
+          {/* Submit Button */}
+          <Button type="submit" className="save-btn" disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <FaEdit className="me-2" />
+                Update Student
+              </>
+            )}
+          </Button>
+        </Form>
       </Card>
-    </div>
+
+      {/* Custom CSS */}
+      <style>{`
+        .stylish-card {
+          background: linear-gradient(145deg, #ffffff, #f3f4f6);
+          border-radius: 16px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .text-gradient {
+          background: linear-gradient(90deg, #4facfe, #00f2fe);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .section-title {
+          font-weight: 600;
+          color: #555;
+          border-left: 4px solid #4facfe;
+          padding-left: 8px;
+        }
+        .save-btn {
+          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          border: none;
+          padding: 10px 20px;
+          border-radius: 12px;
+          font-weight: 500;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        .save-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        }
+        .student-list-btn {
+          font-weight: 600;
+          border-radius: 12px;
+          padding: 6px 14px;
+          box-shadow: 0 3px 10px rgba(79,172,254,0.4);
+          transition: all 0.3s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .student-list-btn:hover {
+          background: #4facfe;
+          color: white;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+          transform: translateY(-2px);
+        }
+      `}</style>
+    </Container>
   );
 };
 

@@ -1,45 +1,36 @@
-// SignUp.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Button, Card, Container, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
-
-// Mock register function (replace with your actual API call)
-const fakeRegister = (email) =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email === "user@example.com") reject(new Error("Email already in use"));
-      else resolve({ email });
-    }, 1000);
-  });
+import { useDispatch, useSelector } from "react-redux";
+import { register } from "../../Redux/auth/actions";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((s) => s.auth);
+
+  const [form, setForm] = useState({ email: "", password: "", displayName: "" });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Redirect if already logged in
   useEffect(() => {
-    if (localStorage.getItem("authUser")) {
-      navigate("/");
-    }
-  }, [navigate]);
+    // if already logged in, go home
+    if (isAuthenticated || localStorage.getItem("authUser")) navigate("/");
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    if (errors[e.target.name]) setErrors((err) => ({ ...err, [e.target.name]: null }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     if (!form.email.trim()) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      newErrors.email = "Invalid email format";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = "Invalid email format";
 
     if (!form.password) newErrors.password = "Password is required";
-    else if (form.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
+    else if (form.password.length < 6) newErrors.password = "Password must be at least 6 characters";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -48,14 +39,13 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setLoading(true);
     try {
-      await fakeRegister(form.email, form.password);
-      toast.success("Registered successfully! Please sign in.");
+      await dispatch(register(form.email, form.password, form.displayName || undefined));
+      toast.success("Registered successfully!");
       navigate("/signin");
     } catch (error) {
-      toast.error("Failed to register: " + error.message);
+      toast.error(error.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -66,6 +56,18 @@ const SignUp = () => {
       <Card className="shadow p-4">
         <h2 className="mb-4 text-center">Sign Up</h2>
         <Form onSubmit={handleSubmit} noValidate>
+          <Form.Group className="mb-3" controlId="displayName">
+            <Form.Label>Full name (optional)</Form.Label>
+            <Form.Control
+              type="text"
+              name="displayName"
+              value={form.displayName}
+              onChange={handleChange}
+              placeholder="Your full name"
+              disabled={loading}
+            />
+          </Form.Group>
+
           <Form.Group className="mb-3" controlId="email">
             <Form.Label>Email address *</Form.Label>
             <Form.Control
@@ -100,8 +102,7 @@ const SignUp = () => {
           <Button type="submit" className="w-100" disabled={loading}>
             {loading ? (
               <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Signing up...
+                <Spinner animation="border" size="sm" className="me-2" /> Signing up...
               </>
             ) : (
               "Sign Up"

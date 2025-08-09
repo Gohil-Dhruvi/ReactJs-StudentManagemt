@@ -1,33 +1,45 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { db } from "../../Config/firebaseConfig";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { Link } from "react-router-dom";
-import { Table, Button, Form, Row, Col, Spinner, Pagination } from "react-bootstrap";
-import { fetchStudents, deleteStudent } from "../../Redux/Students/actions";
+import { Button, Form, Row, Col, Spinner, Card, InputGroup } from "react-bootstrap";
+import { toast } from "react-toastify";
+import StudentCard from "./StudentCard";
+
+import { FaSearch, FaPlus } from "react-icons/fa";
 
 const StudentList = () => {
-  const dispatch = useDispatch();
-  const { students, loading, error } = useSelector((state) => state.students);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const [currentPage, setCurrentPage] = useState(1);
-  const studentsPerPage = 5;
 
-  useEffect(() => {
-    dispatch(fetchStudents());
-  }, [dispatch]);
-
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this student?")) {
-      dispatch(deleteStudent(id));
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "students"));
+      setStudents(
+        querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
+    } catch {
+      toast.error("Failed to fetch students");
     }
+    setLoading(false);
   };
 
-  const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this student?")) {
+      try {
+        await deleteDoc(doc(db, "students", id));
+        toast.success("Student deleted successfully");
+        fetchStudents();
+      } catch {
+        toast.error("Failed to delete student");
+      }
     }
-    setSortConfig({ key, direction });
   };
 
   const filteredStudents = students.filter((student) =>
@@ -38,111 +50,105 @@ const StudentList = () => {
     )
   );
 
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
-    if (sortConfig.key) {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-    }
-    return 0;
-  });
-
-  // Pagination logic
-  const indexOfLastStudent = currentPage * studentsPerPage;
-  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-  const currentStudents = sortedStudents.slice(indexOfFirstStudent, indexOfLastStudent);
-  const totalPages = Math.ceil(sortedStudents.length / studentsPerPage);
-
-  if (loading) return <Spinner animation="border" className="d-block mx-auto" />;
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  if (loading)
+    return <Spinner animation="border" className="d-block mx-auto mt-5" />;
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Student Management</h2>
-      
-      <Row className="mb-4">
-        <Col md={6}>
-          <Form.Group>
-            <Form.Control
-              type="text"
-              placeholder="Search students..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6} className="text-end">
-          <Button as={Link} to="/students/add" variant="success">
-            Add New Student
-          </Button>
-        </Col>
+      {/* Search & Add */}
+      <Card className="p-4 shadow border-0 rounded-4 mb-4 stylish-card">
+        <Row>
+          <Col md={6}>
+            <InputGroup className="search-box">
+              <InputGroup.Text
+                id="search-icon"
+                style={{ background: "transparent", border: "none" }}
+              >
+                <FaSearch color="#666" />
+              </InputGroup.Text>
+              <Form.Control
+                type="text"
+                placeholder="Search students..."
+                aria-label="Search students"
+                aria-describedby="search-icon"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="shadow-none border-0"
+              />
+            </InputGroup>
+          </Col>
+          <Col md={6} className="text-end">
+            <Button
+              as={Link}
+              to="/students/add"
+              className="add-btn"
+            >
+              <FaPlus />
+              Add New Student
+            </Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Student List */}
+      <Row xs={1} sm={2} md={3} className="g-4">
+        {filteredStudents.length > 0 ? (
+          filteredStudents.map((student, index) => (
+            <Col
+              key={student.id}
+              style={{
+                animation: `fadeInUp 0.4s ease ${index * 0.1}s forwards`,
+                opacity: 0,
+              }}
+            >
+              <StudentCard student={student} onDelete={handleDelete} />
+            </Col>
+          ))
+        ) : (
+          <p className="text-center mt-4 text-muted">No students found.</p>
+        )}
       </Row>
 
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th onClick={() => handleSort("name")}>
-              Name {sortConfig.key === "name" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-            </th>
-            <th onClick={() => handleSort("email")}>
-              Email {sortConfig.key === "email" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-            </th>
-            <th onClick={() => handleSort("course")}>
-              Course {sortConfig.key === "course" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-            </th>
-            <th onClick={() => handleSort("age")}>
-              Age {sortConfig.key === "age" && (sortConfig.direction === "asc" ? "↑" : "↓")}
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentStudents.map((student) => (
-            <tr key={student.id}>
-              <td>{student.name}</td>
-              <td>{student.email}</td>
-              <td>{student.course}</td>
-              <td>{student.age}</td>
-              <td>
-                <Link to={`/students/${student.id}`} className="btn btn-info btn-sm me-2">
-                  View
-                </Link>
-                <Link to={`/students/edit/${student.id}`} className="btn btn-warning btn-sm me-2">
-                  Edit
-                </Link>
-                <Button variant="danger" size="sm" onClick={() => handleDelete(student.id)}>
-                  Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      {totalPages > 1 && (
-        <Pagination className="justify-content-center">
-          <Pagination.Prev 
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          />
-          {Array.from({ length: totalPages }, (_, i) => (
-            <Pagination.Item
-              key={i + 1}
-              active={i + 1 === currentPage}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </Pagination.Item>
-          ))}
-          <Pagination.Next
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          />
-        </Pagination>
-      )}
+      {/* Custom CSS */}
+      <style>{`
+        .stylish-card {
+          background: linear-gradient(135deg, #fdfbfb, #ebedee);
+          border-radius: 16px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .search-box {
+          background: #fff;
+          border-radius: 12px;
+          padding: 6px 12px;
+          display: flex;
+          align-items: center;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          transition: all 0.3s ease;
+        }
+        .search-box:focus-within {
+          box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.2);
+        }
+        .add-btn {
+          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          border: none;
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-weight: 500;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+          transition: all 0.3s ease;
+          color: white;
+          font-size: 1rem;
+        }
+        .add-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+          color: white;
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };

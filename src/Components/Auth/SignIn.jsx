@@ -1,47 +1,36 @@
-// SignIn.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Button, Card, Container, Row, Col, Spinner, Alert } from "react-bootstrap";
 import { FaGoogle } from "react-icons/fa";
 import { toast } from "react-toastify";
-
-// Mock auth functions (replace with your actual API calls)
-const fakeLogin = (email, password) =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email === "user@example.com" && password === "password123") resolve({ email });
-      else reject(new Error("Invalid email or password"));
-    }, 1000);
-  });
-
-const fakeGoogleSignIn = () =>
-  new Promise((resolve) => {
-    setTimeout(() => resolve({ email: "googleuser@example.com" }), 1000);
-  });
+import { useDispatch, useSelector } from "react-redux";
+import { login, googleSignIn } from "../../Redux/auth/actions";
 
 const SignIn = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((s) => s.auth);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Redirect if already logged in
   useEffect(() => {
-    if (localStorage.getItem("authUser")) {
+    if (isAuthenticated || localStorage.getItem("authUser")) {
       navigate("/");
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const user = await fakeLogin(email, password);
-      localStorage.setItem("authUser", JSON.stringify(user));
+      const user = await dispatch(login(email, password));
       toast.success("Signed in successfully!");
       navigate("/");
+      return user;
     } catch (err) {
       setError(err.message);
       toast.error(err.message);
@@ -54,8 +43,7 @@ const SignIn = () => {
     setError(null);
     setLoading(true);
     try {
-      const user = await fakeGoogleSignIn();
-      localStorage.setItem("authUser", JSON.stringify(user));
+      await dispatch(googleSignIn());
       toast.success("Signed in with Google successfully!");
       navigate("/");
     } catch (err) {

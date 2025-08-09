@@ -1,14 +1,13 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
 import { Carousel, Card, Button, Container, Row, Col } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   return (
     <div className="home-page">
-      {/* Hero Carousel */}
       <Carousel fade>
         <Carousel.Item>
           <img
@@ -50,7 +49,6 @@ const Home = () => {
         </Carousel.Item>
       </Carousel>
 
-      {/* Features Section */}
       <Container className="my-5">
         <h2 className="text-center mb-4">Key Features</h2>
         <Row>
@@ -59,9 +57,7 @@ const Home = () => {
               <Card.Body className="text-center">
                 <div className="display-4 mb-3">📝</div>
                 <Card.Title>Student Records</Card.Title>
-                <Card.Text>
-                  Manage all student information in one centralized location.
-                </Card.Text>
+                <Card.Text>Manage all student information in one centralized location.</Card.Text>
               </Card.Body>
             </Card>
           </Col>
@@ -70,9 +66,7 @@ const Home = () => {
               <Card.Body className="text-center">
                 <div className="display-4 mb-3">🔍</div>
                 <Card.Title>Advanced Search</Card.Title>
-                <Card.Text>
-                  Quickly find students with our powerful search and filter tools.
-                </Card.Text>
+                <Card.Text>Quickly find students with our powerful search and filter tools.</Card.Text>
               </Card.Body>
             </Card>
           </Col>
@@ -81,16 +75,13 @@ const Home = () => {
               <Card.Body className="text-center">
                 <div className="display-4 mb-3">📊</div>
                 <Card.Title>Reports</Card.Title>
-                <Card.Text>
-                  Generate detailed reports on student performance and attendance.
-                </Card.Text>
+                <Card.Text>Generate detailed reports on student performance and attendance.</Card.Text>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       </Container>
 
-      {/* Call to Action */}
       <div className="bg-light py-5">
         <Container className="text-center">
           <h2 className="mb-4">Ready to get started?</h2>
@@ -100,13 +91,7 @@ const Home = () => {
             </Button>
           ) : (
             <div>
-              <Button
-                as={Link}
-                to="/signup"
-                variant="primary"
-                size="lg"
-                className="me-3"
-              >
+              <Button as={Link} to="/signup" variant="primary" size="lg" className="me-3">
                 Sign Up Now
               </Button>
               <Button as={Link} to="/signin" variant="outline-primary" size="lg">

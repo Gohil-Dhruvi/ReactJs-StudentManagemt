@@ -3,11 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Navbar as BSNavbar, Nav, Container, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../Redux/auth/actions";
+import logo from "../assets/logo.webp";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const handleLogout = async () => {
@@ -22,8 +22,17 @@ const Navbar = () => {
   return (
     <BSNavbar bg="dark" variant="dark" expand="lg" className="mb-4" sticky="top">
       <Container>
-        <BSNavbar.Brand as={Link} to="/">
-          Student Management
+        <BSNavbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          {/* Logo image */}
+          <img
+            src={logo}
+            alt="Student Management Logo"
+            style={{ width: "40px", height: "40px", marginRight: "10px" }}
+          />
+          {/* Text next to logo */}
+          {/* <span style={{ fontWeight: "bold", fontSize: "1.25rem", color: "#fff" }}>
+            Student Management
+          </span> */}
         </BSNavbar.Brand>
         <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BSNavbar.Collapse id="basic-navbar-nav">
@@ -48,7 +57,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <span className="navbar-text me-3">
-                  Welcome, {user?.email || "User"}
+                  Welcome, {user?.displayName || user?.email || "User"}
                 </span>
                 <Button variant="outline-light" onClick={handleLogout}>
                   Logout

@@ -7,7 +7,6 @@ import {
   DELETE_STUDENT_SUCCESS,
   FETCH_STUDENT_BY_ID_SUCCESS,
 } from "./actions";
-// } from "../actions";
 
 const initialState = {
   students: [],

@@ -1,156 +1,308 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { Form, Button, Card, Spinner } from "react-bootstrap";
-import { addStudent, updateStudent, fetchStudentById } from "../../Redux/Students/actions";
+import {
+  Container,
+  Card,
+  Form,
+  Button,
+  Spinner,
+  Row,
+  Col
+} from "react-bootstrap";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { db } from "../../Config/firebaseConfig";
+import { doc, getDoc, addDoc, collection, updateDoc } from "firebase/firestore";
+
+import { FaPlus, FaEdit, FaArrowLeft } from "react-icons/fa";
 
 const StudentForm = () => {
-  const { id } = useParams();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { selectedStudent, loading } = useSelector((state) => state.students);
-  
-  const [formData, setFormData] = useState({
+  const { id } = useParams();
+  const [form, setForm] = useState({
     name: "",
-    email: "",
     age: "",
     course: "",
-    imageUrl: ""
+    email: "",
+    phone: "",
+    gender: "",
+    enrollmentDate: "",
+    address: ""
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchStudentById(id));
-    }
-  }, [dispatch, id]);
+    const fetchStudent = async () => {
+      if (id) {
+        try {
+          const docRef = doc(db, "students", id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setForm(docSnap.data());
+          } else {
+            toast.error("Student not found");
+            navigate("/students");
+          }
+        } catch {
+          toast.error("Failed to load student");
+        }
+      }
+    };
+    fetchStudent();
+  }, [id, navigate]);
 
-  useEffect(() => {
-    if (id && selectedStudent) {
-      setFormData({
-        name: selectedStudent.name || "",
-        email: selectedStudent.email || "",
-        age: selectedStudent.age || "",
-        course: selectedStudent.course || "",
-        imageUrl: selectedStudent.imageUrl || ""
-      });
-    }
-  }, [selectedStudent, id]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.name || !formData.email || !formData.age || !formData.course) {
-      toast.error("Please fill in all fields");
+    if (!form.name.trim()) {
+      toast.error("Name is required");
       return;
     }
-    
-    if (isNaN(formData.age) || Number(formData.age) <= 0) {
-      toast.error("Please enter a valid age");
-      return;
-    }
-
+    setLoading(true);
     try {
       if (id) {
-        await dispatch(updateStudent(id, formData));
-        toast.success("Student updated successfully!");
+        await updateDoc(doc(db, "students", id), {
+          ...form,
+          name: form.name.trim(),
+        });
+        toast.success("Student updated successfully");
       } else {
-        await dispatch(addStudent(formData));
-        toast.success("Student added successfully!");
+        await addDoc(collection(db, "students"), {
+          ...form,
+          name: form.name.trim(),
+        });
+        toast.success("Student added successfully");
       }
       navigate("/students");
-    // } catch (error) {
-    } catch {
-      toast.error("Error saving student");
+    } catch (error) {
+      toast.error(error.message || "Failed to save student");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading && id) return <Spinner animation="border" className="d-block mx-auto" />;
-
   return (
-    <div className="container mt-4">
-      <Card className="shadow">
-        <Card.Body>
-          <h2 className="text-center mb-4">{id ? "Edit Student" : "Add New Student"}</h2>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Full Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
+    <Container className="mt-5" style={{ maxWidth: 800 }}>
+      <Card className="p-4 shadow-lg border-0 rounded-4 stylish-card m-5">
+        <Row className="align-items-center mb-4">
+          <Col>
+            <h3 className="fw-bold text-gradient mb-0">
+              {id ? (
+                <>
+                  <FaEdit className="me-2" />
+                  Edit Student
+                </>
+              ) : (
+                <>
+                  <FaPlus className="me-2" />
+                  Add New Student
+                </>
+              )}
+            </h3>
+          </Col>
+          <Col className="text-end">
+            <Button
+              as={Link}
+              to="/students"
+              variant="outline-primary"
+              size="sm"
+              className="student-list-btn"
+            >
+              <FaArrowLeft />
+              Student List
+            </Button>
+          </Col>
+        </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
+        <Form onSubmit={handleSubmit}>
+          {/* Personal Information */}
+          <h5 className="mb-3 section-title">Personal Information</h5>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Name *</Form.Label>
+                <Form.Control
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Enter student name"
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Age</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="age"
+                  value={form.age}
+                  onChange={handleChange}
+                  placeholder="Age"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Gender</Form.Label>
+                <Form.Select
+                  name="gender"
+                  value={form.gender}
+                  onChange={handleChange}
+                >
+                  <option value="">Select...</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Age</Form.Label>
-              <Form.Control
-                type="number"
-                name="age"
-                min="1"
-                value={formData.age}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
+          {/* Contact Information */}
+          <h5 className="mb-3 section-title">Contact Information</h5>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Enter email"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Phone</Form.Label>
+                <Form.Control
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone number"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Course</Form.Label>
-              <Form.Control
-                type="text"
-                name="course"
-                value={formData.course}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
+          {/* Academic Information */}
+          <h5 className="mb-3 section-title">Academic Information</h5>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Course</Form.Label>
+                <Form.Control
+                  name="course"
+                  value={form.course}
+                  onChange={handleChange}
+                  placeholder="Enter course name"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Enrollment Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="enrollmentDate"
+                  value={form.enrollmentDate}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Image URL (Optional)</Form.Label>
-              <Form.Control
-                type="text"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
-              />
-            </Form.Group>
+          {/* Address */}
+          <h5 className="mb-3 section-title">Address</h5>
+          <Form.Group className="mb-4">
+            <Form.Control
+              as="textarea"
+              name="address"
+              rows={2}
+              value={form.address}
+              onChange={handleChange}
+              placeholder="Enter full address"
+            />
+          </Form.Group>
 
-            <div className="d-grid gap-2">
-              <Button variant="primary" type="submit" size="lg">
-                {id ? "Update Student" : "Add Student"}
-              </Button>
-              <Button 
-                variant="secondary" 
-                size="lg" 
-                onClick={() => navigate("/students")}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Form>
-        </Card.Body>
+          {/* Submit Button */}
+          <Button type="submit" className="save-btn" disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Saving...
+              </>
+            ) : id ? (
+              <>
+                <FaEdit className="me-2" />
+                Update Student
+              </>
+            ) : (
+              <>
+                <FaPlus className="me-2" />
+                Add Student
+              </>
+            )}
+          </Button>
+        </Form>
       </Card>
-    </div>
+
+      {/* Custom CSS */}
+      <style>{`
+        .stylish-card {
+          background: linear-gradient(145deg, #ffffff, #f3f4f6);
+          border-radius: 16px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .text-gradient {
+          background: linear-gradient(90deg, #4facfe, #00f2fe);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .section-title {
+          font-weight: 600;
+          color: #555;
+          border-left: 4px solid #4facfe;
+          padding-left: 8px;
+        }
+        .save-btn {
+          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          border: none;
+          padding: 10px 20px;
+          border-radius: 12px;
+          font-weight: 500;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        .save-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        }
+        .student-list-btn {
+          font-weight: 600;
+          border-radius: 12px;
+          padding: 6px 14px;
+          box-shadow: 0 3px 10px rgba(79,172,254,0.4);
+          transition: all 0.3s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .student-list-btn:hover {
+          background: #4facfe;
+          color: white;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+          transform: translateY(-2px);
+        }
+      `}</style>
+    </Container>
   );
 };
 

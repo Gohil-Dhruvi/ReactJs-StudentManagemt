@@ -1,5 +1,4 @@
-// studentService.js
-import { db } from "../Config/firebaseConfig";  // Adjust path as needed
+import { db } from "../Config/firebaseConfig"; // make sure path matches your firebase.js
 import {
   collection,
   addDoc,
@@ -15,52 +14,64 @@ import {
 
 const studentsCollection = collection(db, "students");
 
-// Get all students
+// Helper: remove undefined values
+const cleanData = (data) => {
+  return Object.fromEntries(
+    Object.entries(data).filter(([ , value]) => value !== undefined)
+  );
+};
+
 export const getAllStudents = async () => {
   const snapshot = await getDocs(studentsCollection);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 };
 
-// Add a student
 export const addStudent = async (studentData) => {
-  // Validate the studentData before sending (optional)
-  const docRef = await addDoc(studentsCollection, studentData);
-  return { id: docRef.id, ...studentData };
+  if (!studentData || !studentData.name) {
+    throw new Error("Student name is required");
+  }
+  const cleanStudent = cleanData(studentData);
+  const docRef = await addDoc(studentsCollection, cleanStudent);
+  return { id: docRef.id, ...cleanStudent };
 };
 
-// Update student
 export const updateStudent = async (id, updatedData) => {
+  if (!id) throw new Error("Student ID is required");
+  const cleanUpdate = cleanData(updatedData);
   const docRef = doc(db, "students", id);
-  await updateDoc(docRef, updatedData);
-  return { id, ...updatedData };
+  await updateDoc(docRef, cleanUpdate);
+  return { id, ...cleanUpdate };
 };
 
-// Delete student
 export const deleteStudent = async (id) => {
+  if (!id) throw new Error("Student ID is required");
   const docRef = doc(db, "students", id);
   await deleteDoc(docRef);
 };
 
-// Get single student by ID
 export const getStudentById = async (id) => {
+  if (!id) throw new Error("Student ID is required");
   const docRef = doc(db, "students", id);
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) throw new Error("Student not found");
   return { id: docSnap.id, ...docSnap.data() };
 };
 
-// Search and sort (optional)
 export const searchStudents = async (searchTerm, sortField, sortDirection) => {
-  let q = studentsCollection;
+  let qRef = studentsCollection;
+
   if (searchTerm) {
-    q = query(q,
+    qRef = query(
+      qRef,
       where("name", ">=", searchTerm),
       where("name", "<=", searchTerm + "\uf8ff")
     );
   }
+
   if (sortField) {
-    q = query(q, orderBy(sortField, sortDirection || "asc"));
+    qRef = query(qRef, orderBy(sortField, sortDirection || "asc"));
   }
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  const snapshot = await getDocs(qRef);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 };

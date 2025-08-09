@@ -1,22 +1,10 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
-import rootReducer from "./rootReducer";
+import { createStore, applyMiddleware, combineReducers, compose } from "redux";
+import {thunk} from "redux-thunk";
+import authReducer from "../Redux/auth/reducers";
 
-const persistConfig = {
-  key: "root",
-  storage,
-  whitelist: ["auth"],
-};
-
-const persistedReducer = persistReducer(persistConfig, rootReducer);
-
-export const store = configureStore({
-  reducer: persistedReducer,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }),
+const rootReducer = combineReducers({
+  auth: authReducer,
 });
 
-export const persistor = persistStore(store);
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+export const store = createStore(rootReducer, composeEnhancers(applyMiddleware(thunk)));
