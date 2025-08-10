@@ -109,7 +109,7 @@ const StudentForm = () => {
               size="sm"
               className="student-list-btn"
             >
-              <FaArrowLeft />
+              <FaArrowLeft className="me-2" />
               Student List
             </Button>
           </Col>
@@ -258,48 +258,54 @@ const StudentForm = () => {
           box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         }
         .text-gradient {
-          background: linear-gradient(90deg, #4facfe, #00f2fe);
+          background: linear-gradient(90deg, #1e3a8a, #14b8a6);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
         .section-title {
           font-weight: 600;
           color: #555;
-          border-left: 4px solid #4facfe;
+          border-left: 4px solid #1e3a8a;
           padding-left: 8px;
         }
         .save-btn {
-          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          background: linear-gradient(135deg, #1e3a8a, #14b8a6);
           border: none;
           padding: 10px 20px;
           border-radius: 12px;
           font-weight: 500;
-          box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+          box-shadow: 0 5px 15px rgba(20, 58, 138, 0.6);
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
+          color: white;
         }
         .save-btn:hover {
+          background: linear-gradient(135deg, #143374, #0f746e);
+          box-shadow: 0 10px 20px rgba(15, 116, 110, 0.8);
           transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.25);
         }
         .student-list-btn {
           font-weight: 600;
           border-radius: 12px;
           padding: 6px 14px;
-          box-shadow: 0 3px 10px rgba(79,172,254,0.4);
+          box-shadow: 0 3px 10px rgba(30, 58, 138, 0.4);
           transition: all 0.3s ease;
           display: inline-flex;
           align-items: center;
           gap: 6px;
+          color: #1e3a8a;
+          border: 1.5px solid #1e3a8a;
+          background: transparent;
         }
         .student-list-btn:hover {
-          background: #4facfe;
+          background: linear-gradient(135deg, #1e3a8a, #14b8a6);
           color: white;
-          box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+          box-shadow: 0 5px 15px rgba(20, 58, 138, 0.6);
           transform: translateY(-2px);
+          border-color: #143374;
         }
       `}</style>
     </Container>

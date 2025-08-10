@@ -58,9 +58,9 @@ const SignIn = () => {
     <Container className="mt-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
-          <Card className="shadow">
+          <Card className="shadow stylish-card">
             <Card.Body>
-              <h2 className="text-center mb-4">Sign In</h2>
+              <h2 className="text-center mb-4 text-gradient">Sign In</h2>
               {error && <Alert variant="danger">{error}</Alert>}
 
               <Form onSubmit={handleSubmit}>
@@ -73,6 +73,7 @@ const SignIn = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
+                    className="form-input"
                   />
                 </Form.Group>
 
@@ -85,10 +86,16 @@ const SignIn = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
+                    className="form-input"
                   />
                 </Form.Group>
 
-                <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  className="w-100 btn-gradient"
+                  disabled={loading}
+                >
                   {loading ? (
                     <>
                       <Spinner animation="border" size="sm" className="me-2" />
@@ -104,7 +111,7 @@ const SignIn = () => {
                 <Button
                   variant="outline-danger"
                   onClick={handleGoogleSignIn}
-                  className="w-100"
+                  className="w-100 btn-google"
                   disabled={loading}
                 >
                   <FaGoogle className="me-2" />
@@ -119,6 +126,58 @@ const SignIn = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Custom styles */}
+      <style>{`
+        .stylish-card {
+          border-radius: 16px;
+          background: #fff;
+          box-shadow: 0 8px 30px rgba(30, 58, 138, 0.1);
+        }
+        .text-gradient {
+          background: linear-gradient(90deg, #1e3a8a, #14b8a6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+          background: linear-gradient(135deg, #1e3a8a, #14b8a6);
+          border: none;
+          font-weight: 600;
+          padding: 10px 0;
+          box-shadow: 0 5px 15px rgba(20, 58, 138, 0.6);
+          transition: all 0.3s ease;
+        }
+        .btn-gradient:hover:not(:disabled) {
+          box-shadow: 0 10px 25px rgba(20, 58, 138, 0.9);
+          transform: translateY(-2px);
+        }
+        .btn-google {
+          border: 2px solid #dc3545;
+          color: #dc3545;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+        }
+        .btn-google:hover:not(:disabled) {
+          background: #dc3545;
+          color: white;
+          box-shadow: 0 10px 20px rgba(220, 53, 69, 0.8);
+          transform: translateY(-2px);
+        }
+        .form-input {
+          border-radius: 10px;
+          border: 1.5px solid #1e3a8a;
+          transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+          border-color: #14b8a6;
+          box-shadow: 0 0 5px #14b8a6;
+          outline: none;
+        }
+      `}</style>
     </Container>
   );
 };

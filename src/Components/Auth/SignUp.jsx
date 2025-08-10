@@ -15,7 +15,6 @@ const SignUp = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    // if already logged in, go home
     if (isAuthenticated || localStorage.getItem("authUser")) navigate("/");
   }, [isAuthenticated, navigate]);
 
@@ -53,8 +52,8 @@ const SignUp = () => {
 
   return (
     <Container className="mt-5" style={{ maxWidth: 420 }}>
-      <Card className="shadow p-4">
-        <h2 className="mb-4 text-center">Sign Up</h2>
+      <Card className="shadow stylish-card p-4">
+        <h2 className="mb-4 text-center text-gradient">Sign Up</h2>
         <Form onSubmit={handleSubmit} noValidate>
           <Form.Group className="mb-3" controlId="displayName">
             <Form.Label>Full name (optional)</Form.Label>
@@ -65,6 +64,7 @@ const SignUp = () => {
               onChange={handleChange}
               placeholder="Your full name"
               disabled={loading}
+              className="form-input"
             />
           </Form.Group>
 
@@ -79,6 +79,7 @@ const SignUp = () => {
               disabled={loading}
               isInvalid={!!errors.email}
               required
+              className="form-input"
             />
             <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
           </Form.Group>
@@ -95,11 +96,12 @@ const SignUp = () => {
               isInvalid={!!errors.password}
               minLength={6}
               required
+              className="form-input"
             />
             <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
           </Form.Group>
 
-          <Button type="submit" className="w-100" disabled={loading}>
+          <Button type="submit" className="w-100 btn-gradient" disabled={loading}>
             {loading ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" /> Signing up...
@@ -113,6 +115,42 @@ const SignUp = () => {
           Already have an account? <Link to="/signin">Sign In</Link>
         </div>
       </Card>
+
+      {/* Custom styles */}
+      <style>{`
+        .stylish-card {
+          border-radius: 16px;
+          background: #fff;
+          box-shadow: 0 8px 30px rgba(30, 58, 138, 0.1);
+        }
+        .text-gradient {
+          background: linear-gradient(90deg, #1e3a8a, #14b8a6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+          background: linear-gradient(135deg, #1e3a8a, #14b8a6);
+          border: none;
+          font-weight: 600;
+          padding: 10px 0;
+          box-shadow: 0 5px 15px rgba(20, 58, 138, 0.6);
+          transition: all 0.3s ease;
+        }
+        .btn-gradient:hover:not(:disabled) {
+          box-shadow: 0 10px 25px rgba(20, 58, 138, 0.9);
+          transform: translateY(-2px);
+        }
+        .form-input {
+          border-radius: 10px;
+          border: 1.5px solid #1e3a8a;
+          transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+          border-color: #14b8a6;
+          box-shadow: 0 0 5px #14b8a6;
+          outline: none;
+        }
+      `}</style>
     </Container>
   );
 };

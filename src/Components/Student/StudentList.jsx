@@ -64,7 +64,7 @@ const StudentList = () => {
                 id="search-icon"
                 style={{ background: "transparent", border: "none" }}
               >
-                <FaSearch color="#666" />
+                <FaSearch color="#1e3a8a" />
               </InputGroup.Text>
               <Form.Control
                 type="text"
@@ -78,11 +78,7 @@ const StudentList = () => {
             </InputGroup>
           </Col>
           <Col md={6} className="text-end">
-            <Button
-              as={Link}
-              to="/students/add"
-              className="add-btn"
-            >
+            <Button as={Link} to="/students/add" className="add-btn">
               <FaPlus />
               Add New Student
             </Button>
@@ -112,9 +108,9 @@ const StudentList = () => {
       {/* Custom CSS */}
       <style>{`
         .stylish-card {
-          background: linear-gradient(135deg, #fdfbfb, #ebedee);
+          background: linear-gradient(135deg, #f9fafb, #e5e7eb);
           border-radius: 16px;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+          box-shadow: 0 8px 20px rgba(30, 58, 138, 0.1);
         }
         .search-box {
           background: #fff;
@@ -122,26 +118,31 @@ const StudentList = () => {
           padding: 6px 12px;
           display: flex;
           align-items: center;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          box-shadow: 0 2px 8px rgba(30, 58, 138, 0.1);
           transition: all 0.3s ease;
+          border: 1.5px solid transparent;
         }
         .search-box:focus-within {
-          box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.2);
+          box-shadow: 0 0 0 3px rgba(20, 116, 110, 0.3);
+          border-color: #14b8a6;
         }
         .add-btn {
-          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          background: linear-gradient(135deg, #1e3a8a, #14b8a6);
           border: none;
           padding: 8px 16px;
           border-radius: 12px;
-          font-weight: 500;
-          box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+          font-weight: 600;
+          box-shadow: 0 5px 15px rgba(20, 58, 138, 0.6);
           transition: all 0.3s ease;
           color: white;
           font-size: 1rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
         }
         .add-btn:hover {
           transform: scale(1.05);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+          box-shadow: 0 10px 20px rgba(20, 58, 138, 0.8);
           color: white;
         }
         @keyframes fadeInUp {
